@@ -1,0 +1,48 @@
+import cv2
+import face_recognition as FR
+
+cam = cv2.VideoCapture(0)
+cam.set(cv2.CAP_PROP_FPS, 90)
+fps = int(cam.get(5))
+
+print("fps:", fps)
+
+font = cv2.FONT_HERSHEY_SIMPLEX
+
+ANAS_Face = FR.load_image_file('/Users/anastalib/PycharmProjects/pythonProject/avatar.jpeg')
+faceLoc = FR.face_locations(ANAS_Face)[0]
+ANAS_Face_Encode = FR.face_encodings(ANAS_Face)[0]
+
+knownEncodings = [ANAS_Face_Encode]
+names = ['ANAS']
+
+print(faceLoc)
+
+while True:
+    ignore, frame = cam.read()
+    unknownFaceBGR = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    faceLocations = FR.face_locations(frame)
+    unknownEncodings = FR.face_encodings(frame, faceLocations)
+
+    for faceLocation, unknownEncoding in zip(faceLocations, unknownEncodings):
+        top, right, bottom, left = faceLocation
+
+        print(faceLocation)
+        cv2.rectangle(frame, (left, top), (right, bottom), (100, 100, 0), 2)
+        name = "unknown person"
+        matches = FR.compare_faces(knownEncodings, unknownEncoding)
+        print(matches)
+        if True in matches:
+            matchIndex = matches.index(True)
+            print(matchIndex)
+            print(names[matchIndex])
+
+            name = names[matchIndex]
+
+    cv2.putText(frame, name, (left, top), font, .75, (255, 0, 0), 3)
+    cv2.imshow('myFace ', frame)
+    cv2.imshow('my window', frame)
+
+    if cv2.waitKey(1) & 0xff == ord('q'):
+        break
+cam.release()
